@@ -1,3 +1,4 @@
+import 'package:daily_activity/screens/NewTask.dart';
 import 'package:daily_activity/widgets/category.dart';
 import 'package:daily_activity/widgets/my_task.dart';
 import 'package:daily_activity/widgets/profile.dart';
@@ -67,6 +68,16 @@ class _HomeScreenState extends State<HomeScreen>{
             );
           }
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => NewTask()),
+          );
+        },
+        child: Icon(Icons.add),
+        backgroundColor: Colors.green,
       ),
     );
   }

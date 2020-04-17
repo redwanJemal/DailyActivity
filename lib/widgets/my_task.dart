@@ -1,4 +1,4 @@
-import 'package:daily_activity/screens/NewTask.dart';
+import 'package:daily_activity/screens/OngoingTasks.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -111,7 +111,7 @@ class _MyTaskState extends State<MyTask>{
                     child: IconButton(icon: Icon(Icons.calendar_today,size: 18,), onPressed: (){
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => NewTask()),
+                        MaterialPageRoute(builder: (context) => OngoingTasks()),
                       );
                     })),
               )

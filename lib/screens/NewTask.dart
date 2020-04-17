@@ -28,11 +28,16 @@ class _NewTaskState extends State<NewTask>{
       _endTimeController.text = end.hour.toString() + " : " + end.minute.toString() + period;
     });
   }
-
   Future _startTime() async{
     TimeOfDay start = await showTimePicker(
       initialTime: TimeOfDay.now(),
       context: context,
+        builder: (BuildContext context, Widget child) {
+          return Theme(
+            data: ThemeData.dark(),
+            child: child,
+          );
+        }
     );
     if(start != null) setState(() {
       String period = start.period == DayPeriod.pm?" Pm":" Am";
@@ -44,7 +49,13 @@ class _NewTaskState extends State<NewTask>{
         context: context,
         initialDate: new DateTime.now(),
         firstDate: new DateTime(2016),
-        lastDate: new DateTime(2022)
+        lastDate: new DateTime(2022),
+        builder: (BuildContext context, Widget child) {
+          return Theme(
+            data: ThemeData.dark(),
+            child: child,
+          );
+        }
     );
     if(picked != null) setState(() => _dateController.text = DateFormat.yMMMMd().format(picked));
   }
@@ -97,7 +108,6 @@ class _NewTaskState extends State<NewTask>{
       ],
     );
   }
-
   Widget datePickerWidget(BuildContext context){
 
     return Row(
@@ -187,9 +197,15 @@ class _NewTaskState extends State<NewTask>{
       ),
     );
   }
+  Widget categoryList(BuildContext context){
 
-  Widget categoryList(){
+    final List<String> entries = <String>['Sport', 'Quran', 'Seera','D','E'];
+    final List<int> colorCodes = <int>[0xff27454F, 0xff5F5F5F, 0xff37474F,0xff37474F,0xff37474F];
+    int i = 0;
     return Container(
+      width: (MediaQuery.of(context).size.width) - 20,
+      decoration: BoxDecoration(
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,11 +213,60 @@ class _NewTaskState extends State<NewTask>{
           Text('Category',style: GoogleFonts.pTSerif(
               fontSize: 18
           ),),
+          SizedBox(height: 10,),
+          Wrap(
+            direction: Axis.horizontal,
+            children: entries.map((item) => listItem1(context,item,colorCodes[i++ % entries.length])).toList().cast<Widget>(),
+          )
         ],
       ),
     );
   }
-  
+  Widget listItem1(BuildContext context, String category, int color){
+    double screenWidth = MediaQuery.of(context).size.width - 20;
+    double itemWidth = screenWidth / 4 - 10;
+
+    debugPrint(screenWidth.toString());
+
+    return InkWell(
+        onTap: () {
+          Scaffold.of(context).showSnackBar(SnackBar(
+            content: Text(category),
+            backgroundColor: Color(color),
+          ));
+        },
+        child: Container(
+          width: 90,
+
+          margin: EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            color: Color(color),
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+          ),
+
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 10,horizontal: 15),
+            child: Center(
+              child: Text(category,style: TextStyle(color:Colors.white,),overflow: TextOverflow.ellipsis,),
+            ),
+          ),
+        ),
+    );
+  }
+  Widget listViewWidget(){
+    final List<String> entries = <String>['A', 'B', 'C'];
+    final List<int> colorCodes = <int>[0xff37474F, 0xff37474F, 0xff37474F];
+
+     return ListView.builder(
+      scrollDirection: Axis.vertical,
+      shrinkWrap: true,
+      itemCount: entries.length,
+      itemBuilder: (BuildContext context, int index) {
+        return listItem1(context,entries[index],colorCodes[index]);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -296,7 +361,27 @@ class _NewTaskState extends State<NewTask>{
                               },
                             ),
                             SizedBox(height: 10,),
-                            categoryList()
+                            categoryList(context),
+                            Container(
+                              child: RaisedButton(
+                                color: Colors.blueAccent,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: new BorderRadius.circular(18.0),
+                                  ),
+                                  child: Container(
+                                    width: MediaQuery.of(context).size.width - 40,
+                                    padding: EdgeInsets.all(10),
+                                    child: Center(
+                                        child:Text('Create Task',style: GoogleFonts.pTSerif(
+                                          color: Colors.white,
+                                          fontSize:14
+                                        ),)),
+                                  ),
+                                  onPressed: (){
+                                    debugPrint('Creating Task');
+                                  }
+                                 ),
+                            )
                           ],
                         ),
                       ),
