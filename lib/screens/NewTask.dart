@@ -223,10 +223,6 @@ class _NewTaskState extends State<NewTask>{
     );
   }
   Widget listItem1(BuildContext context, String category, int color){
-    double screenWidth = MediaQuery.of(context).size.width - 20;
-    double itemWidth = screenWidth / 4 - 10;
-
-    debugPrint(screenWidth.toString());
 
     return InkWell(
         onTap: () {

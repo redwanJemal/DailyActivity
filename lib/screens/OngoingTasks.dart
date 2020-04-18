@@ -1,7 +1,33 @@
+import 'package:daily_activity/models/Task.dart';
+import 'package:daily_activity/services/tasks.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class OngoingTasks extends StatelessWidget{
+import 'NewTask.dart';
+
+class OngoingTasks extends StatefulWidget{
+  @override
+  _OngoingTasksState createState() => _OngoingTasksState();
+}
+class _OngoingTasksState extends State<OngoingTasks>{
+
+  TaskModel todayTasks;
+  Future<List<TaskModel>> taskList;
+  List<TaskModel> tasks;
+  bool loadingTasks = true;
+
+  @override
+  void initState(){
+    super.initState();
+    getData();
+  }
+
+  getData() async{
+    tasks =  await TaskService().getTasks();
+    setState(() {
+      loadingTasks = false;
+    });
+  }
 
   Widget back(BuildContext context){
     return Container(
@@ -49,7 +75,7 @@ class OngoingTasks extends StatelessWidget{
                     borderRadius: new BorderRadius.circular(25.0),
                   ),
                   child: Container(
-                    padding: EdgeInsets.all(15),
+                    padding: EdgeInsets.all(12),
                     child: Center(
                         child:Row(
                           children: <Widget>[
@@ -62,8 +88,11 @@ class OngoingTasks extends StatelessWidget{
                           ],
                         )),
                   ),
-                  onPressed: (){
-                    debugPrint('Creating Task');
+                  onPressed: ()async{
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => NewTask())
+                    );
                   }
               ),
             ),
@@ -108,13 +137,19 @@ class OngoingTasks extends StatelessWidget{
                 decoration: BoxDecoration(
                   color:Color(bold)
                 ),
-                child: Container(
-                  color: Color(lighter),
-                  padding: EdgeInsets.symmetric(vertical: 10,horizontal: 10),
-                  child: Text(text,maxLines: 3,overflow: TextOverflow.ellipsis, style: GoogleFonts.pTSerif(
-                    color: Color(bold),
-                    fontSize: 16,
-                  ),),
+                child: InkWell(
+                  splashColor: Color(bold),
+                  onTap: (){
+                    debugPrint(text);
+                  },
+                  child: Container(
+                    color: Color(lighter),
+                    padding: EdgeInsets.symmetric(vertical: 10,horizontal: 10),
+                    child: Text(text,maxLines: 3,overflow: TextOverflow.ellipsis, style: GoogleFonts.pTSerif(
+                      color: Color(bold),
+                      fontSize: 16,
+                    ),),
+                  ),
                 ),
               ),
             ),
@@ -124,38 +159,22 @@ class OngoingTasks extends StatelessWidget{
     );
   }
 
-  Widget task2(bold,lighter,text){
-    return Container(
-        margin: EdgeInsets.fromLTRB(0, 5, 0, 0),
-        color: Colors.blue,
-    );
-  }
-
   Widget taskLists(){
 
-    final List<String> tasks = <String>[
-      'This is Yoga',
-      'The First Task of the week is to finish What we have been doing',
-      'The First Task of the week is to finish What we have been doing great job for this summer and the comming summer',
-      'The First Task of the week is to finish What we have been doing great job for this summer and the comming summer',
-      'This is Yoga',
-      'The First Task of the week is to finish What we have been doing',
-      'The First Task of the week is to finish What we have been doing great job for this summer and the comming summer',
-      'The First Task of the week is to finish What we have been doing great job for this summer and the comming summer',
-      'This is Yoga',
-      'The First Task of the week is to finish What we have been doing',
-      'The First Task of the week is to finish What we have been doing great job for this summer and the comming summer',
-      'The First Task of the week is to finish What we have been doing great job for this summer and the comming summer'
-    ];
     final List<int> boldColors = <int>[0xff263238, 0xffFF6F00, 0xff01579B,0xff4A148C,0xff263238, 0xffFF6F00, 0xff01579B,0xff4A148C,0xff263238, 0xffFF6F00, 0xff01579B,0xff4A148C];
     final List<int> lighterColors = <int>[0xffCFD8DC, 0xffFFECB3, 0xffB3E5FC,0xffE1BEE7,0xffCFD8DC, 0xffFFECB3, 0xffB3E5FC,0xffE1BEE7,0xffCFD8DC, 0xffFFECB3, 0xffB3E5FC,0xffE1BEE7];
 
-    return ListView.builder(
-      itemCount: tasks.length,
-      itemBuilder: (context, index) {
-        return task(boldColors[index],lighterColors[index],tasks[index]);
-      },
-    );
+    if(!loadingTasks){
+      return ListView.builder(
+        itemCount: tasks.length,
+        itemBuilder: (context, index) {
+          return task(boldColors[index % boldColors.length],lighterColors[index % lighterColors.length],tasks[index].description);
+        },
+      );
+    }
+    else {
+      return CircularProgressIndicator();
+    }
   }
 
   @override
@@ -175,6 +194,7 @@ class OngoingTasks extends StatelessWidget{
               //taskLists()
               Container(
                 height: MediaQuery.of(context).size.height - 150,
+                padding: EdgeInsets.symmetric(vertical: 5,horizontal: 0),
                 child: taskLists(),
               )
             ],
