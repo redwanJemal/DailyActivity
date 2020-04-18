@@ -81,5 +81,32 @@
       "startTime": "2012-02-27 13:27:00.123456789z",
       "endTime": "2012-02-27 13:27:00.123456789z"
     }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Quran",
+      "count": 4
+    },
+    {
+      "id": 2,
+      "name": "Reading Books",
+      "count": 4
+    },
+    {
+      "id": 3,
+      "name": "Marketing",
+      "count": 4
+    },
+    {
+      "id": 4,
+      "name": "Social Media",
+      "count": 4
+    },
+    {
+      "id": 5,
+      "name": "Teaching",
+      "count": 4
+    }
   ]
 }

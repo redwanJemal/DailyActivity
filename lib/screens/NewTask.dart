@@ -1,3 +1,5 @@
+import 'package:daily_activity/models/Category.dart';
+import 'package:daily_activity/services/tasks.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -11,12 +13,193 @@ class NewTask extends StatefulWidget{
 class _NewTaskState extends State<NewTask>{
 
   final _formKey = GlobalKey<FormState>();
+  List<CategoryModel> categories;
+  bool loadingCategories;
   TextEditingController _dateController = new TextEditingController();
   TextEditingController _startTimeController = new TextEditingController();
   TextEditingController _endTimeController = new TextEditingController();
   TextEditingController _descriptionController = new TextEditingController();
 
+  @override
+  void initState(){
+    super.initState();
+    getData();
+  }
 
+  getData() async{
+    setState(() {
+      loadingCategories = true;
+    });
+    categories =  await TaskService().getCategories();
+    setState(() {
+      loadingCategories = false;
+    });
+  }
+  Widget header(BuildContext context){
+    return Container(
+      alignment: Alignment.topLeft,
+      padding: EdgeInsets.all(5),
+      color: Color(0xff37474F),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          back(context),
+          SizedBox(
+            height: 10,
+          ),
+          newTask(),
+        ],
+      ),
+    );
+  }
+  Widget back(BuildContext context){
+    return Container(
+        child: IconButton(
+          icon: Icon(Icons.arrow_back_ios,color: Colors.white,size: 16,),
+          onPressed: (){
+            Navigator.pop(context);
+          },
+        )
+    );
+  }
+  Widget newTask(){
+    return Container(
+      margin: EdgeInsets.fromLTRB(5, 0, 0, 0),
+      padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
+      decoration: BoxDecoration(
+
+      ),
+      child: Text('Create New Task',style: GoogleFonts.pTSerif(
+          color: Colors.white,
+          fontSize: 25
+      ),),
+    );
+  }
+
+  Widget createNewTask(BuildContext context){
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        header(context),
+        formInput(context),
+      ],
+    );
+  }
+
+  Widget formInput(BuildContext context){
+    return Container(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: <Widget>[
+            Container(
+              padding: EdgeInsets.all(20),
+
+              color: Color(0xff37474F),
+              child: darkBgFormFields(),
+            ),
+            SizedBox(height: 4,),
+            Container(
+              width:MediaQuery.of(context).size.width,
+              margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
+              padding: EdgeInsets.all(20),
+              child: lighterBgFormFields(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  Widget darkBgFormFields(){
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        TextFormField(
+          cursorColor: Colors.grey,
+          style: GoogleFonts.pTSerif(
+            color: Colors.white,
+          ),
+          decoration: const InputDecoration(
+            labelText: 'Task Title',
+            border: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white,width: 1.0)),
+            labelStyle: TextStyle(
+                color: Colors.grey
+            ),
+            errorStyle: TextStyle(
+              color: Colors.redAccent,
+            ),
+          ),
+          validator: (value) {
+            if (value.isEmpty) {
+              return 'Please enter title';
+            }
+            return null;
+          },
+        ),
+        datePickerWidget(context),
+      ],
+    );
+  }
+  Widget lighterBgFormFields(){
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        timePickerWidget(),
+        SizedBox(height:5),
+        TextFormField(
+          controller: _descriptionController,
+          keyboardType: TextInputType.multiline,
+          maxLines: 2,
+          cursorColor: Colors.grey,
+          style: GoogleFonts.pTSerif(
+            color: Colors.black,
+          ),
+          decoration: const InputDecoration(
+            labelText: 'Description',
+
+            border: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white,width: 1.0)),
+            labelStyle: TextStyle(
+                color: Colors.grey
+            ),
+            errorStyle: TextStyle(
+              color: Colors.redAccent,
+            ),
+          ),
+          validator: (value) {
+            if (value.isEmpty) {
+              return 'Please enter title';
+            }
+            return null;
+          },
+        ),
+        SizedBox(height: 10,),
+        categoryList(context),
+        Container(
+          child: RaisedButton(
+              color: Colors.blueAccent,
+              shape: RoundedRectangleBorder(
+                borderRadius: new BorderRadius.circular(18.0),
+              ),
+              child: Container(
+                width: MediaQuery.of(context).size.width - 40,
+                padding: EdgeInsets.all(10),
+                child: Center(
+                    child:Text('Create Task',style: GoogleFonts.pTSerif(
+                        color: Colors.white,
+                        fontSize:14
+                    ),)),
+              ),
+              onPressed: (){
+                debugPrint('Creating Task');
+              }
+          ),
+        )
+      ],
+    );
+  }
 
   Future _endTime() async{
     TimeOfDay end = await showTimePicker(
@@ -161,66 +344,35 @@ class _NewTaskState extends State<NewTask>{
       ],
     );
   }
-  Widget formInput(BuildContext context){
-    return Container(
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            TextFormField(
-              cursorColor: Colors.grey,
-              style: GoogleFonts.pTSerif(
-                color: Colors.white,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'Task Title',
-                border: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white,width: 1.0)),
-                labelStyle: TextStyle(
-                    color: Colors.grey
-                ),
-                errorStyle: TextStyle(
-                  color: Colors.redAccent,
-                ),
-              ),
-              validator: (value) {
-                if (value.isEmpty) {
-                  return 'Please enter title';
-                }
-                return null;
-              },
-            ),
-            datePickerWidget(context),
-          ],
-        ),
-      ),
-    );
-  }
   Widget categoryList(BuildContext context){
 
-    final List<String> entries = <String>['Sport', 'Quran', 'Seera','D','E'];
     final List<int> colorCodes = <int>[0xff27454F, 0xff5F5F5F, 0xff37474F,0xff37474F,0xff37474F];
     int i = 0;
-    return Container(
-      width: (MediaQuery.of(context).size.width) - 20,
-      decoration: BoxDecoration(
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text('Category',style: GoogleFonts.pTSerif(
-              fontSize: 18
-          ),),
-          SizedBox(height: 10,),
-          Wrap(
-            direction: Axis.horizontal,
-            children: entries.map((item) => listItem1(context,item,colorCodes[i++ % entries.length])).toList().cast<Widget>(),
-          )
-        ],
-      ),
-    );
+
+    if(!loadingCategories){
+      return Container(
+        width: (MediaQuery.of(context).size.width) - 20,
+        decoration: BoxDecoration(
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text('Category',style: GoogleFonts.pTSerif(
+                fontSize: 18
+            ),),
+            SizedBox(height: 10,),
+            Wrap(
+              direction: Axis.horizontal,
+              children: categories.map((item) => listItem1(context,item.name,colorCodes[i++ % categories.length])).toList().cast<Widget>(),
+            )
+          ],
+        ),
+      );
+    }
+    else {
+    return CircularProgressIndicator();
+    }
   }
   Widget listItem1(BuildContext context, String category, int color){
 
@@ -278,111 +430,7 @@ class _NewTaskState extends State<NewTask>{
                   ),
                   child: Container(
                   width:MediaQuery.of(context).size.width,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Container(
-                          alignment: Alignment.topLeft,
-                          padding: EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            color: Color(0xff37474F),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              IconButton(
-                                icon: Icon(Icons.arrow_back_ios,color: Colors.white,size: 16,),
-                                onPressed: (){
-                                  Navigator.pop(context);
-                                },
-                              ),
-                              SizedBox(
-                                height: 10,
-                              ),
-                              Container(
-                                margin: EdgeInsets.fromLTRB(5, 0, 0, 0),
-                                padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
-                                decoration: BoxDecoration(
-
-                                ),
-                                child: Text('Create New Task',style: GoogleFonts.pTSerif(
-                                    color: Colors.white,
-                                    fontSize: 25
-                                ),),
-                              ),
-                              Container(
-                                margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
-                                padding: EdgeInsets.all(15),
-                                child: formInput(context),
-                              ),
-                            ],
-                          )
-                      ),
-                      SizedBox(height: 4,),
-                      Container(
-                        width:MediaQuery.of(context).size.width,
-                        margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
-                        padding: EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            timePickerWidget(),
-                            SizedBox(height:5),
-                            TextFormField(
-                              controller: _descriptionController,
-                              keyboardType: TextInputType.multiline,
-                              maxLines: 2,
-                              cursorColor: Colors.grey,
-                              style: GoogleFonts.pTSerif(
-                                color: Colors.black,
-                              ),
-                              decoration: const InputDecoration(
-                                labelText: 'Description',
-
-                                border: UnderlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.white,width: 1.0)),
-                                labelStyle: TextStyle(
-                                    color: Colors.grey
-                                ),
-                                errorStyle: TextStyle(
-                                  color: Colors.redAccent,
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value.isEmpty) {
-                                  return 'Please enter title';
-                                }
-                                return null;
-                              },
-                            ),
-                            SizedBox(height: 10,),
-                            categoryList(context),
-                            Container(
-                              child: RaisedButton(
-                                color: Colors.blueAccent,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: new BorderRadius.circular(18.0),
-                                  ),
-                                  child: Container(
-                                    width: MediaQuery.of(context).size.width - 40,
-                                    padding: EdgeInsets.all(10),
-                                    child: Center(
-                                        child:Text('Create Task',style: GoogleFonts.pTSerif(
-                                          color: Colors.white,
-                                          fontSize:14
-                                        ),)),
-                                  ),
-                                  onPressed: (){
-                                    debugPrint('Creating Task');
-                                  }
-                                 ),
-                            )
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                  child: createNewTask(context),
                 ),
               ),
             );
