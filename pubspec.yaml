@@ -27,8 +27,8 @@ dependencies:
   flutter_markdown:
   sqflite:
   flutter_local_notifications:
-  flutter_datetime_picker:
   datetime_picker_formfield:
+  path_provider:
   google_fonts:
 
 dev_dependencies:

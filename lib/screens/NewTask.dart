@@ -1,9 +1,11 @@
+import 'package:daily_activity/database/Database.dart';
 import 'package:daily_activity/models/Category.dart';
 import 'package:daily_activity/services/tasks.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
+import 'dart:math' as math;
 
 class NewTask extends StatefulWidget{
   @override
@@ -20,6 +22,15 @@ class _NewTaskState extends State<NewTask>{
   TextEditingController _endTimeController = new TextEditingController();
   TextEditingController _descriptionController = new TextEditingController();
 
+  // data for testing
+  List<CategoryModel> testCategories = [
+    CategoryModel(id:1,name: "Tefsir", count: 1),
+    CategoryModel(id:2,name: "Seera", count: 2),
+    CategoryModel(id:3,name: "Sport", count: 3),
+    CategoryModel(id:4,name: "Hifz", count: 2),
+    CategoryModel(id:5,name: "Subhi", count: 3),
+  ];
+
   @override
   void initState(){
     super.initState();
@@ -30,11 +41,25 @@ class _NewTaskState extends State<NewTask>{
     setState(() {
       loadingCategories = true;
     });
-    categories =  await TaskService().getCategories();
+    categories =  await DBProvider.db.getAllCategories();
     setState(() {
       loadingCategories = false;
     });
   }
+
+  processData() async{
+    var data = {
+      'date': _dateController.text,
+      'startTime': _startTimeController.text,
+      'endTime': _endTimeController.text,
+      'description': _descriptionController.text
+    };
+    print(data);
+    // Insert new Category
+    CategoryModel rnd = testCategories[math.Random().nextInt(testCategories.length)];
+     await DBProvider.db.newCategory(rnd);
+  }
+
   Widget header(BuildContext context){
     return Container(
       alignment: Alignment.topLeft,
@@ -76,6 +101,35 @@ class _NewTaskState extends State<NewTask>{
     );
   }
 
+  Widget createTaskButton(BuildContext context){
+    return Container(
+      child: RaisedButton(
+          color: Colors.blueAccent,
+          shape: RoundedRectangleBorder(
+            borderRadius: new BorderRadius.circular(18.0),
+          ),
+          child: Container(
+            width: MediaQuery.of(context).size.width - 40,
+            padding: EdgeInsets.all(10),
+            child: Center(
+                child:Text('Create Task',style: GoogleFonts.pTSerif(
+                    color: Colors.white,
+                    fontSize:14
+                ),)),
+          ),
+          onPressed: (){
+            if (_formKey.currentState.validate()) {
+              // If the form is valid, display a snackbar. In the real world,
+              // you'd often call a server or save the information in a database.
+              processData();
+              Scaffold
+                  .of(context)
+                  .showSnackBar(SnackBar(content: Text('Processing Data')));
+            }
+          }
+      ),
+    );
+  }
   Widget createNewTask(BuildContext context){
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -104,8 +158,8 @@ class _NewTaskState extends State<NewTask>{
               width:MediaQuery.of(context).size.width,
               margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
               padding: EdgeInsets.all(20),
-              child: lighterBgFormFields(),
-            ),
+              child: lighterBgFormFields(context),
+            )
           ],
         ),
       ),
@@ -122,8 +176,12 @@ class _NewTaskState extends State<NewTask>{
           ),
           decoration: const InputDecoration(
             labelText: 'Task Title',
-            border: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white,width: 1.0)),
+            enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey)
+            ),
+            focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color:Colors.white)
+            ),
             labelStyle: TextStyle(
                 color: Colors.grey
             ),
@@ -142,7 +200,7 @@ class _NewTaskState extends State<NewTask>{
       ],
     );
   }
-  Widget lighterBgFormFields(){
+  Widget lighterBgFormFields(BuildContext context){
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -156,11 +214,14 @@ class _NewTaskState extends State<NewTask>{
           style: GoogleFonts.pTSerif(
             color: Colors.black,
           ),
-          decoration: const InputDecoration(
+          decoration: new InputDecoration(
             labelText: 'Description',
-
-            border: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white,width: 1.0)),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.black)
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color:Colors.black)
+            ),
             labelStyle: TextStyle(
                 color: Colors.grey
             ),
@@ -170,33 +231,14 @@ class _NewTaskState extends State<NewTask>{
           ),
           validator: (value) {
             if (value.isEmpty) {
-              return 'Please enter title';
+              return 'Please enter description';
             }
             return null;
           },
         ),
         SizedBox(height: 10,),
         categoryList(context),
-        Container(
-          child: RaisedButton(
-              color: Colors.blueAccent,
-              shape: RoundedRectangleBorder(
-                borderRadius: new BorderRadius.circular(18.0),
-              ),
-              child: Container(
-                width: MediaQuery.of(context).size.width - 40,
-                padding: EdgeInsets.all(10),
-                child: Center(
-                    child:Text('Create Task',style: GoogleFonts.pTSerif(
-                        color: Colors.white,
-                        fontSize:14
-                    ),)),
-              ),
-              onPressed: (){
-                debugPrint('Creating Task');
-              }
-          ),
-        )
+
       ],
     );
   }
@@ -261,6 +303,12 @@ class _NewTaskState extends State<NewTask>{
                     labelText: 'Start',
                     labelStyle: TextStyle(color: Colors.grey)
                 ),
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return 'Please Select Start Time';
+                  }
+                  return null;
+                },
                 // validator: validateDob,
                 onSaved: (String val) {},
               ),
@@ -282,6 +330,13 @@ class _NewTaskState extends State<NewTask>{
                     labelText: 'End',
                     labelStyle: TextStyle(color: Colors.grey)
                 ),
+
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return 'Please Select Start Time';
+                  }
+                  return null;
+                },
                 // validator: validateDob,
                 onSaved: (String val) {},
               ),
@@ -311,8 +366,13 @@ class _NewTaskState extends State<NewTask>{
                 ),
                 decoration: const InputDecoration(
                 labelText: 'DATE',
-                border: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white,width: 1.0)),
+
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey)
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color:Colors.white)
+                  ),
                 labelStyle: TextStyle(
                 color: Colors.grey
                 ),
@@ -364,7 +424,7 @@ class _NewTaskState extends State<NewTask>{
             SizedBox(height: 10,),
             Wrap(
               direction: Axis.horizontal,
-              children: categories.map((item) => listItem1(context,item.name,colorCodes[i++ % categories.length])).toList().cast<Widget>(),
+              children: categories.map((item) => categoryItem(context,item,colorCodes[i++ % categories.length])).toList().cast<Widget>(),
             )
           ],
         ),
@@ -374,12 +434,12 @@ class _NewTaskState extends State<NewTask>{
     return CircularProgressIndicator();
     }
   }
-  Widget listItem1(BuildContext context, String category, int color){
+  Widget categoryItem(BuildContext context, CategoryModel category, int color){
 
     return InkWell(
         onTap: () {
           Scaffold.of(context).showSnackBar(SnackBar(
-            content: Text(category),
+            content: Text(category.name),
             backgroundColor: Color(color),
           ));
         },
@@ -395,23 +455,10 @@ class _NewTaskState extends State<NewTask>{
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: 10,horizontal: 15),
             child: Center(
-              child: Text(category,style: TextStyle(color:Colors.white,),overflow: TextOverflow.ellipsis,),
+              child: Text(category.name,style: TextStyle(color:Colors.white,),overflow: TextOverflow.ellipsis,),
             ),
           ),
         ),
-    );
-  }
-  Widget listViewWidget(){
-    final List<String> entries = <String>['A', 'B', 'C'];
-    final List<int> colorCodes = <int>[0xff37474F, 0xff37474F, 0xff37474F];
-
-     return ListView.builder(
-      scrollDirection: Axis.vertical,
-      shrinkWrap: true,
-      itemCount: entries.length,
-      itemBuilder: (BuildContext context, int index) {
-        return listItem1(context,entries[index],colorCodes[index]);
-      },
     );
   }
 
@@ -430,7 +477,17 @@ class _NewTaskState extends State<NewTask>{
                   ),
                   child: Container(
                   width:MediaQuery.of(context).size.width,
-                  child: createNewTask(context),
+                  child: Stack(
+                    children: <Widget>[
+                      createNewTask(context),
+                      Positioned(
+
+                          bottom: 20,
+                          left: 10,
+                          child: createTaskButton(context)
+                      )
+                    ],
+                  ),
                 ),
               ),
             );
