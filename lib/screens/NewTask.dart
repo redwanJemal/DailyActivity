@@ -1,5 +1,6 @@
 import 'package:daily_activity/database/Database.dart';
 import 'package:daily_activity/models/Category.dart';
+import 'package:daily_activity/models/Task.dart';
 import 'package:daily_activity/services/tasks.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,6 +9,10 @@ import 'dart:async';
 import 'dart:math' as math;
 
 class NewTask extends StatefulWidget{
+  final bool isTaskCreate;
+
+  NewTask({Key key, @required this.isTaskCreate}) : super(key: key);
+
   @override
   _NewTaskState createState() => new _NewTaskState();
 }
@@ -21,6 +26,8 @@ class _NewTaskState extends State<NewTask>{
   TextEditingController _startTimeController = new TextEditingController();
   TextEditingController _endTimeController = new TextEditingController();
   TextEditingController _descriptionController = new TextEditingController();
+  TextEditingController _titleController = new TextEditingController();
+  String taskHeader = '';
 
   // data for testing
   List<CategoryModel> testCategories = [
@@ -34,6 +41,7 @@ class _NewTaskState extends State<NewTask>{
   @override
   void initState(){
     super.initState();
+    taskHeader = widget.isTaskCreate == true?'Create New Task':'Update Task';
     getData();
   }
 
@@ -47,20 +55,27 @@ class _NewTaskState extends State<NewTask>{
     });
   }
 
-  processData() async{
-    var data = {
-      'date': _dateController.text,
-      'startTime': _startTimeController.text,
-      'endTime': _endTimeController.text,
-      'description': _descriptionController.text
-    };
-    print(data);
+  addCategory() async{
     // Insert new Category
     CategoryModel rnd = testCategories[math.Random().nextInt(testCategories.length)];
-     await DBProvider.db.newCategory(rnd);
+    await DBProvider.db.newCategory(rnd);
   }
 
-  Widget header(BuildContext context){
+  processData() async{
+    TaskModel task = TaskModel(
+        id:1,
+        title:_titleController.text,
+        startDate: _dateController.text,
+        startTime: _startTimeController.text,
+        endTime: _endTimeController.text,
+        description: _descriptionController.text,
+        status:0);
+    int newTask = await TaskService().newTask(task);
+    print(newTask);
+
+  }
+
+  Widget header(BuildContext context,String taskMode){
     return Container(
       alignment: Alignment.topLeft,
       padding: EdgeInsets.all(5),
@@ -72,7 +87,7 @@ class _NewTaskState extends State<NewTask>{
           SizedBox(
             height: 10,
           ),
-          newTask(),
+          newTask(taskMode),
         ],
       ),
     );
@@ -87,14 +102,14 @@ class _NewTaskState extends State<NewTask>{
         )
     );
   }
-  Widget newTask(){
+  Widget newTask(String taskMode){
     return Container(
       margin: EdgeInsets.fromLTRB(5, 0, 0, 0),
       padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
       decoration: BoxDecoration(
 
       ),
-      child: Text('Create New Task',style: GoogleFonts.pTSerif(
+      child: Text(taskMode,style: GoogleFonts.pTSerif(
           color: Colors.white,
           fontSize: 25
       ),),
@@ -135,7 +150,7 @@ class _NewTaskState extends State<NewTask>{
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        header(context),
+        header(context,taskHeader),
         formInput(context),
       ],
     );
@@ -170,6 +185,7 @@ class _NewTaskState extends State<NewTask>{
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         TextFormField(
+          controller: _titleController,
           cursorColor: Colors.grey,
           style: GoogleFonts.pTSerif(
             color: Colors.white,
@@ -424,7 +440,7 @@ class _NewTaskState extends State<NewTask>{
             SizedBox(height: 10,),
             Wrap(
               direction: Axis.horizontal,
-              children: categories.map((item) => categoryItem(context,item,colorCodes[i++ % categories.length])).toList().cast<Widget>(),
+              children: categories == null?[Container()]:categories.map((item) => categoryItem(context,item,colorCodes[i++ % categories.length])).toList().cast<Widget>(),
             )
           ],
         ),

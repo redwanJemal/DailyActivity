@@ -9,6 +9,7 @@ import 'package:sqflite/sqflite.dart';
 class DBProvider{
   DBProvider._();
 
+  DBProvider();
   static final DBProvider db = DBProvider._();
 
   Database _database;
@@ -21,29 +22,35 @@ class DBProvider{
     return _database;
   }
 
+  void _createDb(Database db, int newVersion) async {
+
+    await db.execute('CREATE TABLE Category(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, '
+        'tasksCount INTEGER)');
+
+    await db.execute('CREATE TABLE Task(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, description TEXT, startDate TEXT,'
+        'startDate Text,endDate Text,status INTEGER)');
+  }
+
   initDB() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, "DailyActivity.db");
+    String path = join(documentsDirectory.path, "DailyActivityv3.db");
     return await openDatabase(path, version: 1, onOpen: (db) {},
         onCreate: (Database db, int version) async {
-          await db.execute("CREATE TABLE Category ("
-              "id INTEGER PRIMARY KEY,"
-              "name TEXT,"
-              "tasksCount INTEGER,"
-              ")");
+          await db.execute('CREATE TABLE Category(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, '
+              'tasksCount INTEGER)');
+
+          await db.execute('CREATE TABLE Task(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, description TEXT, startDate TEXT,'
+              'startTime Text,endTime Text,status INTEGER)');
         });
   }
 
   newCategory(CategoryModel newCategory) async {
     final db = await database;
-    //get the biggest id in the table
-    var table = await db.rawQuery("SELECT MAX(id)+1 as id FROM Category");
-    int id = table.first["id"];
     //insert to the table using the new id
     var raw = await db.rawInsert(
-        "INSERT Into Category (id,name,tasksCount)"
-            " VALUES (?,?,?)",
-        [id, newCategory.name,newCategory.count]);
+        "INSERT Into Category (name,tasksCount)"
+            " VALUES (?,?)",
+        [ newCategory.name,newCategory.count]);
     return raw;
   }
 

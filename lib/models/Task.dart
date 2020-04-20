@@ -5,9 +5,9 @@ class TaskModel{
   String title;
   String description;
   int status;
-  DateTime startDate;
-  DateTime startTime;
-  DateTime endTime;
+  String startDate;
+  String startTime;
+  String endTime;
 
   TaskModel({this.id,this.title,this.description,this.status,this.startDate,this.startTime,this.endTime});
   factory TaskModel.fromRawJson(String str) => TaskModel.fromJson(json.decode(str));
@@ -18,9 +18,9 @@ class TaskModel{
       title: json['title'],
       description: json['description'],
       status: json['status'],
-      startDate: DateTime.parse(json['startDate']),
-      startTime: DateTime.parse(json['startTime']),
-      endTime: DateTime.parse(json['endTime'])
+      startDate: json['startDate'],
+      startTime: json['startTime'],
+      endTime: json['endTime']
   );
 
   Map<String, dynamic> toJson()=>{

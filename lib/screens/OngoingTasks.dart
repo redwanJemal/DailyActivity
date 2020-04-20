@@ -14,7 +14,7 @@ class _OngoingTasksState extends State<OngoingTasks>{
   TaskModel todayTasks;
   Future<List<TaskModel>> taskList;
   List<TaskModel> tasks;
-  bool loadingTasks = true;
+  bool loadingTasks ;
 
   @override
   void initState(){
@@ -23,10 +23,22 @@ class _OngoingTasksState extends State<OngoingTasks>{
   }
 
   getData() async{
-    tasks =  await TaskService().getTasks();
+    setState(() {
+      loadingTasks = true;
+    });
+    tasks =  await TaskService().getAllTasks();
     setState(() {
       loadingTasks = false;
     });
+  }
+
+  getTask(id) async{
+    TaskModel task = await TaskService().getTask(id);
+    return task;
+  }
+
+  deleteTask(id) async{
+    await TaskService().deleteTask(id);
   }
 
   Widget back(BuildContext context){
@@ -91,7 +103,7 @@ class _OngoingTasksState extends State<OngoingTasks>{
                   onPressed: ()async{
                     Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => NewTask())
+                        MaterialPageRoute(builder: (context) => NewTask(isTaskCreate: true,))
                     );
                   }
               ),
@@ -102,7 +114,7 @@ class _OngoingTasksState extends State<OngoingTasks>{
     );
   }
 
-  Widget task(bold,lighter,text){
+  Widget task(bold,lighter,TaskModel task){
     return Container(
       margin: EdgeInsets.fromLTRB(0, 5, 0, 0),
       child: IntrinsicHeight(
@@ -118,11 +130,11 @@ class _OngoingTasksState extends State<OngoingTasks>{
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.max,
                 children: <Widget>[
-                  Text('4:25 Pm',style: GoogleFonts.pTSerif(
+                  Text(task.startTime,style: GoogleFonts.pTSerif(
                     fontSize: 14,
                     color: Color(bold)
                   ),),
-                  Text('4:25 Am',style: GoogleFonts.pTSerif(
+                  Text(task.endTime,style: GoogleFonts.pTSerif(
                       fontSize: 14,
                       color: Color(lighter)
                   ),)
@@ -140,12 +152,16 @@ class _OngoingTasksState extends State<OngoingTasks>{
                 child: InkWell(
                   splashColor: Color(bold),
                   onTap: (){
-                    debugPrint(text);
+                    getTask(task.id);
+//                    Navigator.push(
+//                        context,
+//                        MaterialPageRoute(builder: (context) => NewTask(isTaskCreate: false,))
+//                    );
                   },
                   child: Container(
                     color: Color(lighter),
                     padding: EdgeInsets.symmetric(vertical: 10,horizontal: 10),
-                    child: Text(text,maxLines: 3,overflow: TextOverflow.ellipsis, style: GoogleFonts.pTSerif(
+                    child: Text(task.description,maxLines: 3,overflow: TextOverflow.ellipsis, style: GoogleFonts.pTSerif(
                       color: Color(bold),
                       fontSize: 16,
                     ),),
@@ -168,12 +184,12 @@ class _OngoingTasksState extends State<OngoingTasks>{
       return ListView.builder(
         itemCount: tasks.length,
         itemBuilder: (context, index) {
-          return task(boldColors[index % boldColors.length],lighterColors[index % lighterColors.length],tasks[index].description);
+          return task(boldColors[index % boldColors.length],lighterColors[index % lighterColors.length],tasks[index]);
         },
       );
     }
     else {
-      return CircularProgressIndicator();
+      return Center(child: CircularProgressIndicator());
     }
   }
 
