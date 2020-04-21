@@ -65,6 +65,16 @@ class TaskService{
     return list;
   }
 //
+  Future<List<TaskModel>> getAllTodayTasks(String date,currentPage,pageSize) async {
+    int limit = pageSize;
+    int offset = (currentPage - 1) * pageSize;
+    final db = await DBProvider().database;
+    var res = await db.query("Task", where: "startDate = ?", whereArgs: [date],limit: limit,offset: offset);
+    List<TaskModel> list =
+    res.isNotEmpty ? res.map((c) => TaskModel.fromJson(c)).toList() : [];
+    return list;
+  }
+//
   deleteTask(int id) async {
     final db = await DBProvider().database;
     return db.delete("Task", where: "id = ?", whereArgs: [id]);

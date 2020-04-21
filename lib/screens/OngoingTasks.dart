@@ -2,9 +2,16 @@ import 'package:daily_activity/models/Task.dart';
 import 'package:daily_activity/services/tasks.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 import 'NewTask.dart';
 
+class DayName{
+  String name;
+  int value;
+
+  DayName({this.name,this.value});
+}
 class OngoingTasks extends StatefulWidget{
   @override
   _OngoingTasksState createState() => _OngoingTasksState();
@@ -12,19 +19,35 @@ class OngoingTasks extends StatefulWidget{
 class _OngoingTasksState extends State<OngoingTasks>{
 
   TaskModel todayTasks;
+  final int page = 1;
+  final int pageSize = 10;
   Future<List<TaskModel>> taskList;
   List<TaskModel> tasks;
   bool loadingTasks ;
+  DateTime _selectedDate;
+  String selectedDate;
+  List<DayName> daysOfTheWeek = [
+      DayName(name: "MON", value: 1),
+      DayName(name: "TUE", value: 2),
+      DayName(name: "WED", value: 3),
+      DayName(name: "THU", value: 4),
+      DayName(name: "FRI", value: 5),
+      DayName(name: "SAT", value: 6),
+      DayName(name: "SAN", value: 7),
+  ];
 
   @override
   void initState(){
     super.initState();
-    getData();
+    setTodayDate();
+    getTodayTasks();
   }
 
   getData() async{
     setState(() {
       loadingTasks = true;
+      _selectedDate = DateTime.now();
+      selectedDate = DateFormat("MMMM,yyyy").format(DateTime.now());
     });
     tasks =  await TaskService().getAllTasks();
     setState(() {
@@ -32,15 +55,127 @@ class _OngoingTasksState extends State<OngoingTasks>{
     });
   }
 
+
+  setTodayDate(){
+    setState(() {
+      _selectedDate = DateTime.now();
+      selectedDate = DateFormat("MMMM,yyyy").format(DateTime.now());
+    });
+  }
   getTask(id) async{
     TaskModel task = await TaskService().getTask(id);
     return task;
   }
-
+  getTodayTasks() async{
+    String today = DateFormat.yMMMMd().format(_selectedDate).toString();
+    setState(() {
+      loadingTasks = true;
+    });
+    tasks =  await TaskService().getAllTodayTasks(today,page,pageSize);
+    setState(() {
+      loadingTasks = false;
+    });
+  }
   deleteTask(id) async{
     await TaskService().deleteTask(id);
   }
+  deleteAllTask() async{
+    await TaskService().deleteAll();
+  }
 
+  Future selectDate() async {
+    DateTime picked = await showDatePicker(
+        context: context,
+        initialDate: new DateTime.now(),
+        firstDate: new DateTime(2016),
+        lastDate: new DateTime(2022),
+        builder: (BuildContext context, Widget child) {
+          return Theme(
+            data: ThemeData.dark(),
+            child: child,
+          );
+        }
+    );
+    if(picked != null) setState(() {
+      _selectedDate = picked;
+      selectedDate = DateFormat("MMMM, yyyy").format(picked);
+      getTodayTasks();
+    });
+  }
+
+  changeWeekDay(DayName day){
+    DateTime todayDate = _selectedDate;
+    int newDay = _selectedDate.day - (_selectedDate.weekday - day.value);
+    todayDate = DateTime(todayDate.year,todayDate.month,newDay);
+    setState(() {
+      _selectedDate = todayDate;
+    });
+    getTodayTasks();
+  }
+  Widget dayItem(DayName day){
+    int dayValue = _selectedDate.day - (_selectedDate.weekday - day.value);
+    if(_selectedDate.day == dayValue){
+      return InkWell(
+        splashColor: Colors.grey,
+        onTap: (){
+          changeWeekDay(day);
+        },
+        child: Container(
+          color: Colors.grey,
+          padding: EdgeInsets.symmetric(vertical: 2,horizontal: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Container(
+                child: Text(day.name,style: GoogleFonts.pTSerif(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white
+                ),),
+              ),
+              Container(
+                child: Text(dayValue.toString(),style: GoogleFonts.pTSerif(
+                    fontSize: 12,
+                    color: Colors.white
+                ),),
+              )
+            ],
+          ),
+        ),
+      );
+    }
+    else{
+      return InkWell(
+        onTap: (){
+          changeWeekDay(day);
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 2,horizontal: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Container(
+                child: Text(day.name,style: GoogleFonts.pTSerif(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey
+                ),),
+              ),
+              Container(
+                child: Text(dayValue.toString(),style: GoogleFonts.pTSerif(
+                    fontSize: 12,
+                    color: Colors.grey
+                ),),
+              )
+            ],
+          ),
+        ),
+      );
+    }
+
+  }
   Widget back(BuildContext context){
     return Container(
         child: IconButton(
@@ -113,7 +248,38 @@ class _OngoingTasksState extends State<OngoingTasks>{
       ),
     );
   }
+  Widget weekDays(){
 
+    return Container(
+      height: 70,
+      padding: EdgeInsets.symmetric(vertical: 0,horizontal: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            margin: EdgeInsets.fromLTRB(5, 0, 0, 10),
+            child: GestureDetector(
+              onTap: (){
+                selectDate();
+              },
+              child: Text(selectedDate,style: GoogleFonts.pTSerif(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black
+              ),),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.max,
+            children: daysOfTheWeek.map((day) => dayItem(day)).toList()
+          ),
+        ],
+      ),
+      
+    );
+  }
   Widget task(bold,lighter,TaskModel task){
     return Container(
       margin: EdgeInsets.fromLTRB(0, 5, 0, 0),
@@ -127,16 +293,16 @@ class _OngoingTasksState extends State<OngoingTasks>{
               width: 80,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisSize: MainAxisSize.max,
                 children: <Widget>[
                   Text(task.startTime,style: GoogleFonts.pTSerif(
                     fontSize: 14,
-                    color: Color(bold)
+                    color: Colors.grey
                   ),),
                   Text(task.endTime,style: GoogleFonts.pTSerif(
                       fontSize: 14,
-                      color: Color(lighter)
+                      color: Colors.grey
                   ),)
                 ],
               ),
@@ -181,12 +347,68 @@ class _OngoingTasksState extends State<OngoingTasks>{
     final List<int> lighterColors = <int>[0xffCFD8DC, 0xffFFECB3, 0xffB3E5FC,0xffE1BEE7,0xffCFD8DC, 0xffFFECB3, 0xffB3E5FC,0xffE1BEE7,0xffCFD8DC, 0xffFFECB3, 0xffB3E5FC,0xffE1BEE7];
 
     if(!loadingTasks){
-      return ListView.builder(
-        itemCount: tasks.length,
-        itemBuilder: (context, index) {
-          return task(boldColors[index % boldColors.length],lighterColors[index % lighterColors.length],tasks[index]);
-        },
-      );
+      if(tasks.length == 0){
+        return Container(
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              IconButton(
+                onPressed: (){
+                  getTodayTasks();
+                },
+                icon: Icon(Icons.refresh,size: 20,color: Colors.grey),
+              ),
+              SizedBox(height: 10,),
+              Text('No Tasks for Today',style: GoogleFonts.pTSerif(
+                fontSize: 24,
+                color: Colors.grey
+              ),)
+            ],
+          ),
+        );
+      }
+      else{
+        return ListView.builder(
+          itemCount: tasks.length,
+          itemBuilder: (context, index) {
+            return Dismissible(
+                key: Key(tasks[index].id.toString()),
+                onDismissed: (direction){
+//                  deleteTask(tasks[index].id);
+//                  setState(() {
+//                    tasks.removeAt(index);
+//                  });
+                },
+                background: Container(
+                  color: Colors.grey,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      width: 150,
+                      child: Row(
+                        children: <Widget>[
+                          IconButton(
+                            onPressed: (){
+
+                            },
+                            icon: Icon(Icons.delete),),
+                          IconButton(
+                            onPressed: (){
+
+                            },
+                            icon: Icon(Icons.access_time),)
+                        ],
+                      ),
+                    )
+                  ),
+                ),
+                child: task(boldColors[index % boldColors.length],lighterColors[index % lighterColors.length],tasks[index])
+            );
+          },
+        );
+      }
     }
     else {
       return Center(child: CircularProgressIndicator());
@@ -206,10 +428,9 @@ class _OngoingTasksState extends State<OngoingTasks>{
             children: <Widget>[
               back(context),
               newTask(context),
-              //tasksByDate(),
-              //taskLists()
+              weekDays(),
               Container(
-                height: MediaQuery.of(context).size.height - 150,
+                height: MediaQuery.of(context).size.height - 220,
                 padding: EdgeInsets.symmetric(vertical: 5,horizontal: 0),
                 child: taskLists(),
               )

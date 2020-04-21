@@ -1,4 +1,5 @@
 import 'package:daily_activity/database/Database.dart';
+import 'package:daily_activity/helpers/local_notification_helper.dart';
 import 'package:daily_activity/models/Category.dart';
 import 'package:daily_activity/models/Task.dart';
 import 'package:daily_activity/services/tasks.dart';
@@ -22,12 +23,14 @@ class _NewTaskState extends State<NewTask>{
   final _formKey = GlobalKey<FormState>();
   List<CategoryModel> categories;
   bool loadingCategories;
+
   TextEditingController _dateController = new TextEditingController();
   TextEditingController _startTimeController = new TextEditingController();
   TextEditingController _endTimeController = new TextEditingController();
   TextEditingController _descriptionController = new TextEditingController();
   TextEditingController _titleController = new TextEditingController();
   String taskHeader = '';
+
 
   // data for testing
   List<CategoryModel> testCategories = [
@@ -43,8 +46,17 @@ class _NewTaskState extends State<NewTask>{
     super.initState();
     taskHeader = widget.isTaskCreate == true?'Create New Task':'Update Task';
     getData();
+
+    LocalNotificationsHelper().initNotification();
   }
 
+  void showNotifications() {
+    LocalNotificationsHelper().showNotifications();
+  }
+
+  void showScheduledNotification(int id,String title) {
+    LocalNotificationsHelper().showScheduledNotification(id,title);
+  }
   getData() async{
     setState(() {
       loadingCategories = true;
@@ -72,7 +84,6 @@ class _NewTaskState extends State<NewTask>{
         status:0);
     int newTask = await TaskService().newTask(task);
     print(newTask);
-
   }
 
   Widget header(BuildContext context,String taskMode){
@@ -133,6 +144,7 @@ class _NewTaskState extends State<NewTask>{
                 ),)),
           ),
           onPressed: (){
+            showNotifications();
             if (_formKey.currentState.validate()) {
               // If the form is valid, display a snackbar. In the real world,
               // you'd often call a server or save the information in a database.
@@ -266,7 +278,7 @@ class _NewTaskState extends State<NewTask>{
     );
     if(end != null) setState(() {
       String period = end.period == DayPeriod.pm?" Pm":" Am";
-      _endTimeController.text = end.hour.toString() + " : " + end.minute.toString() + period;
+      _endTimeController.text = end.hour.toString()  + period;
     });
   }
   Future _startTime() async{
@@ -282,7 +294,7 @@ class _NewTaskState extends State<NewTask>{
     );
     if(start != null) setState(() {
       String period = start.period == DayPeriod.pm?" Pm":" Am";
-      _startTimeController.text = start.hour.toString() + " : " + start.minute.toString() + period;
+      _startTimeController.text = start.hour.toString()+ period;
     });
   }
   Future _selectDate() async {
@@ -298,7 +310,9 @@ class _NewTaskState extends State<NewTask>{
           );
         }
     );
-    if(picked != null) setState(() => _dateController.text = DateFormat.yMMMMd().format(picked));
+    if(picked != null) {
+      setState(() => _dateController.text = DateFormat.yMMMMd().format(picked));
+    }
   }
 
   Widget timePickerWidget(){
