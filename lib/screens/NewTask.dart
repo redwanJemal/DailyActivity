@@ -30,6 +30,7 @@ class _NewTaskState extends State<NewTask>{
   TextEditingController _descriptionController = new TextEditingController();
   TextEditingController _titleController = new TextEditingController();
   String taskHeader = '';
+  bool creatingNewTask = false;
 
 
   // data for testing
@@ -82,8 +83,14 @@ class _NewTaskState extends State<NewTask>{
         endTime: _endTimeController.text,
         description: _descriptionController.text,
         status:0);
+    setState(() {
+      creatingNewTask = true;
+    });
     int newTask = await TaskService().newTask(task);
-    print(newTask);
+    setState(() {
+      creatingNewTask = false;
+    });
+    //print(newTask);
   }
 
   Widget header(BuildContext context,String taskMode){
@@ -129,7 +136,10 @@ class _NewTaskState extends State<NewTask>{
 
   Widget createTaskButton(BuildContext context){
     return Container(
-      child: RaisedButton(
+      child: creatingNewTask? CircularProgressIndicator(
+
+      ):RaisedButton(
+
           color: Colors.blueAccent,
           shape: RoundedRectangleBorder(
             borderRadius: new BorderRadius.circular(18.0),
@@ -144,15 +154,16 @@ class _NewTaskState extends State<NewTask>{
                 ),)),
           ),
           onPressed: (){
-            showNotifications();
-            if (_formKey.currentState.validate()) {
-              // If the form is valid, display a snackbar. In the real world,
-              // you'd often call a server or save the information in a database.
-              processData();
-              Scaffold
-                  .of(context)
-                  .showSnackBar(SnackBar(content: Text('Processing Data')));
-            }
+            //showNotifications();
+            processData();
+//            if (_formKey.currentState.validate()) {
+//              // If the form is valid, display a snackbar. In the real world,
+//              // you'd often call a server or save the information in a database.
+//              processData();
+//              Scaffold
+//                  .of(context)
+//                  .showSnackBar(SnackBar(content: Text('Processing Data')));
+//            }
           }
       ),
     );
